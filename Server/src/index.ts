@@ -1,14 +1,29 @@
-import express from 'express'
-import { clearScreenDown } from 'readline';
+import '@/db/connect';
+import express from "express";
+import dotenv from "dotenv";
+import authRouter from "./routes/auth";
 
-const app = express ();
+dotenv.config(); 
+const app = express();
 
-const port = process.env.PORT || 8989
+// app.use((req, res, next) => {
+//   req.on("data", (chunk) => {
+//     req.body = JSON.parse(chunk);
+//     next();
+//   });
+// });
+app.use(express.json());
+app.use(express.urlencoded({ extended: false }));
 
-app.get('/',(req,res)=>{
-    res.send('Hello')
-})
+app.use("/auth", authRouter);
 
-app.listen(port , ()=>{
-    console.log(`The apps is runind on ${port}`)
-})
+app.post("/test", (req, res) => {
+  console.log(req.body);
+  res.json({});
+});
+
+const port = process.env.PORT || 8989;
+
+app.listen(port, () => {
+  console.log(`The apps is running on ${port}`);
+});
