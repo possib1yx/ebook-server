@@ -1,21 +1,21 @@
 import {Schema, model} from "mongoose"
-import { string } from "zod"
+
 
 
 const verificationTokenSchema = new Schema({
     userID: {
         type: String,
-        required: true
+        required: true,
 
     },
     token:{
-        type: string,
-        required: true
+        type: String,
+        required: true,
     },
     expires:{
         type: Date,
         default: Date.now(),
-        expires: 60 * 60 * 24
+        expires: 60 * 60 * 24,
     },
 });
 
