@@ -1,5 +1,5 @@
 import '@/db/connect';
-import express from "express";
+import express, {ErrorRequestHandler} from "express";
 import dotenv from "dotenv";
 import authRouter from "./routes/auth";
 
@@ -22,8 +22,13 @@ app.post("/test", (req, res) => {
   res.json({});
 });
 
+app.use(((error,req,res,next)=>{
+  res.status(500).json({error:error.message})
+}) as ErrorRequestHandler )
+
 const port = process.env.PORT || 8989;
 
 app.listen(port, () => {
   console.log(`The apps is running on ${port}`);
 });
+
