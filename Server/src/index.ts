@@ -1,4 +1,6 @@
+import 'express-async-errors';
 import '@/db/connect';
+import { errorHandler } from './middlewares/error';
 import express, {ErrorRequestHandler} from "express";
 import dotenv from "dotenv";
 import authRouter from "./routes/auth";
@@ -22,9 +24,7 @@ app.post("/test", (req, res) => {
   res.json({});
 });
 
-app.use(((error,req,res,next)=>{
-  res.status(500).json({error:error.message})
-}) as ErrorRequestHandler )
+app.use(errorHandler)
 
 const port = process.env.PORT || 8989;
 

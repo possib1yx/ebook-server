@@ -8,7 +8,7 @@ import { z, ZodRawShape } from "zod";
 };
 
 export const validate = <T extends ZodRawShape>(obj: T): RequestHandler => {
-  return(req, res, next) => {
+  return (req, res, next) => {
     const schema = z.object(obj);
 
     const result = schema.safeParse(req.body);
