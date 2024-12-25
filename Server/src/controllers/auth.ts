@@ -6,8 +6,8 @@ import verificationTokenModel from "@/models/verificationtoken";
 import userModel from "@/models/user";
 import mail from "@/utils/mail";
 import { sendErrorResponse } from "@/utils/helper";
+import jwt from 'jsonwebtoken'
 
-import { link } from "fs";
 
 export const generateAuthLink: RequestHandler = async (
   req: Request,
@@ -33,7 +33,9 @@ export const generateAuthLink: RequestHandler = async (
 
   // const link = `${process.env.VERIFICAION_LINK}=${randomToken}&userID=${userID}`;
   // const link = `http://localhost:8989/verify?token=${randomToken}&userID=${userID}
+  // const link = `${process.env.VERIFICAION_LINK}?token=${randomToken}&userID=${userID}`;
   const link = `${process.env.VERIFICAION_LINK}?token=${randomToken}&userID=${userID}`;
+
 
 
   await mail.sendVerificationMail({
@@ -45,7 +47,7 @@ export const generateAuthLink: RequestHandler = async (
 };
 
 export const verifyAuthToken : RequestHandler =async (req,res) => {
-  const {token, userID} = req.body
+  const {token, userID} = req.query
 
   if(typeof token !== 'string' || typeof userID !== 'string'){
     return sendErrorResponse({
@@ -54,8 +56,8 @@ export const verifyAuthToken : RequestHandler =async (req,res) => {
       res
     })
   }
- const verificationToken = await verificationTokenModel.findOne({userID})
- if(!verificationToken || verificationToken.compare(token)){
+ const verificationtoken = await verificationTokenModel.findOne({userID})
+ if(!verificationtoken || !verificationtoken.compare(token)){
   return sendErrorResponse({
     status : 403,
     message: "invalid request ,token mismatch",
@@ -72,6 +74,18 @@ if(!user){
   })
 }
 
-  res.json({})
+await verificationTokenModel.findByIdAndDelete(verificationtoken._id)
+
+
+//authentication
+const payload = {userID: user._id}
+
+const authToken = jwt.sign(payload, process.env.JWT_SECRET! ,{
+  expiresIn: '25d'
+})
+
+  res.json({authToken})
+
+
 };
   
