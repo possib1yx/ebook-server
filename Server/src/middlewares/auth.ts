@@ -28,7 +28,7 @@ export const isAuth: RequestHandler = async (req, res, next) => {
   }
   //otherwise if the token is valid or signed by same server
   const paylod = jwt.verify(authToken, process.env.JWT_SECRET!) as {
-    userID: string;
+    userID: string; // The payload contains the userID if the token is valid
   };
 
   // if the token is valid find user form the playload
