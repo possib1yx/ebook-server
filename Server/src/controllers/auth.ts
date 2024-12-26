@@ -8,6 +8,7 @@ import mail from "@/utils/mail";
 import { formatUserProfile } from "@/utils/helper";
 import { sendErrorResponse } from "@/utils/helper";
 import jwt from "jsonwebtoken";
+import { profile } from "console";
 
 export const generateAuthLink: RequestHandler = async (
   req: Request,
@@ -98,5 +99,7 @@ export const verifyAuthToken: RequestHandler = async (req, res) => {
 
 
 export const sendProileInfo : RequestHandler =(req,res) => {
-  
+  res.json({
+    profile: req.user,
+  })
 }
