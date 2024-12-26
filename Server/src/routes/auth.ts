@@ -1,5 +1,6 @@
-import { generateAuthLink,verifyAuthToken } from "@/controllers/auth";
+import { generateAuthLink,verifyAuthToken,sendProileInfo } from "@/controllers/auth";
 import { emailValidationSchema, validate } from "@/middlewares/validator";
+import { isAuth } from "@/middlewares/auth";
 import { Router } from "express";
 
 const authRouter = Router();
@@ -11,6 +12,7 @@ authRouter.post(
 );
 
 authRouter.get("/verify",verifyAuthToken)
+authRouter.get("/profile",isAuth, sendProileInfo)
 
 
 
