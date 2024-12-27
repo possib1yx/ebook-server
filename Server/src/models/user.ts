@@ -1,10 +1,13 @@
 import { model,ObjectId,Schema } from "mongoose";
+import { object, string } from "zod";
 
 export interface userDoc {
     _id:ObjectId;
     email: string;
     role: "user" | "author";
     name?: string;
+    signedUp: boolean;
+    avatar?:{url:string; id: string} 
 }
 
 
@@ -24,6 +27,15 @@ const userSchema = new Schema<userDoc>({
         enum: ['user','author'],
         default: "user",
     },
+    signedUp: {
+        type: Boolean,
+        default: false
+    },
+    avatar: {
+        type: Object,
+        url: String,
+        id: String,
+    }
 
 });
 

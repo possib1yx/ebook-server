@@ -107,3 +107,6 @@ export const sendProileInfo : RequestHandler =(req,res) => {
 export const logout : RequestHandler =(req,res) => {
  res.clearCookie('authToken').send();
 }
+export const updateProfile : RequestHandler =(req,res) => {
+ 
+}
