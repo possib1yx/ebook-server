@@ -1,4 +1,4 @@
-import { Response } from "express";
+import { Response,Request } from "express";
 import { userDoc } from "@/models/user";
 
 type ErrorResponseType = {
@@ -16,7 +16,7 @@ export const sendErrorResponse = ({
 };
 
 
-export const formatUserProfile = (user:userDoc) =>{
+export const formatUserProfile = (user:userDoc) : Request["user"]=>{
   return {
     id: user._id.toString(),
     name: user.name,

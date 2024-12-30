@@ -32,9 +32,6 @@ export const generateAuthLink: RequestHandler = async (
     token: randomToken,
   });
 
-  // const link = `${process.env.VERIFICAION_LINK}=${randomToken}&userID=${userID}`;
-  // const link = `http://localhost:8989/verify?token=${randomToken}&userID=${userID}
-  // const link = `${process.env.VERIFICAION_LINK}?token=${randomToken}&userID=${userID}`;
   const link = `${process.env.VERIFICAION_LINK}?token=${randomToken}&userID=${userID}`;
 
   await mail.sendVerificationMail({
@@ -88,25 +85,43 @@ export const verifyAuthToken: RequestHandler = async (req, res) => {
     expires: new Date(Date.now() + 25 * 24 * 60 * 60 * 1000),
   });
 
-  // res.redirect(
-  //   `${process.env.AUTH_SUCCESS_URL}?profile=${encodeURIComponent(
-  //     JSON.stringify(formatUserProfile(user))
-  //   )}`
-  // );
-  
-  res.send();
+  res.redirect(
+    `${process.env.AUTH_SUCCESS_URL}?profile=${JSON.stringify(
+      formatUserProfile(user)
+    )}`
+  );
 };
 
 
-export const sendProileInfo : RequestHandler =(req,res) => {
+export const sendProfileInfo : RequestHandler =(req,res) => {
   res.json({
     profile: req.user,
-  })
-}
+  });
+};
 
 export const logout : RequestHandler =(req,res) => {
  res.clearCookie('authToken').send();
 }
-export const updateProfile : RequestHandler =(req,res) => {
- 
-}
+export const updateProfile: RequestHandler = async (req, res) => {
+  const user = await userModel.findByIdAndUpdate(
+    req.user.id,
+    {
+      name: req.body.name,
+      signedUp: true,
+    },
+    {
+      new: true,
+    }
+  );
+
+  if (!user)
+    return sendErrorResponse({
+      res,
+      message: "Something went wrong user not found!",
+      status: 500,
+    });
+
+  // if there is any file upload them to cloud and update the database
+
+  res.json({ profile: formatUserProfile(user) });
+};
