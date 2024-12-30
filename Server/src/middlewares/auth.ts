@@ -10,7 +10,9 @@ import jwt from "jsonwebtoken";
                 id: string;
                 name?: string;
                 email: string;
-                role : 'user'| 'author'
+                role : 'user'| 'author';
+                avatar?: string;
+                signedUp: boolean;
             }
         }
     }

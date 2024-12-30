@@ -5,6 +5,7 @@ import { errorHandler } from './middlewares/error';
 import express, {ErrorRequestHandler} from "express";
 import dotenv from "dotenv";
 import authRouter from "./routes/auth";
+import authorRouter from './routes/author';
 import { fileParser } from './middlewares/file';
 
 dotenv.config(); 
@@ -21,6 +22,9 @@ app.use(express.urlencoded({ extended: false }));
 app.use(cookieParser())
 
 app.use("/auth", authRouter);
+app.use("/author", authorRouter);
+
+
 
 app.post("/test",fileParser, (req, res) => {
   console.log(req.files);

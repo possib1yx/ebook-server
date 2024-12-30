@@ -9,6 +9,9 @@ import { formatUserProfile } from "@/utils/helper";
 import { sendErrorResponse } from "@/utils/helper";
 import jwt from "jsonwebtoken";
 import { profile } from "console";
+import slugify from "slugify";
+import { updateAvatarToAws } from "@/utils/fileupload";
+
 
 export const generateAuthLink: RequestHandler = async (
   req: Request,
@@ -120,6 +123,25 @@ export const updateProfile: RequestHandler = async (req, res) => {
       message: "Something went wrong user not found!",
       status: 500,
     });
+
+
+    const file = req.files.avatar;
+  if (file && !Array.isArray(file)) {
+    const uniqueFileName = `${user._id}-${slugify(req.body.name, {
+      lower: true,
+      replacement: "-",
+    })}.png`;
+    user.avatar = await updateAvatarToAws(
+      file,
+      uniqueFileName,
+      user.avatar?.id
+    );
+
+    await user.save();
+  }
+
+
+
 
   // if there is any file upload them to cloud and update the database
 
