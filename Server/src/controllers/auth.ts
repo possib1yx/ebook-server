@@ -1,48 +1,56 @@
-import { Request, Response, RequestHandler } from "express";
+import { RequestHandler } from "express";
 import crypto from "crypto";
-import nodemailer from "nodemailer";
-
-import verificationTokenModel from "@/models/verificationtoken";
-import userModel from "@/models/user";
+import VerificationTokenModel from "@/models/verificationtoken";
+import UserModel from "@/models/user";
 import mail from "@/utils/mail";
-import { formatUserProfile } from "@/utils/helper";
-import { sendErrorResponse } from "@/utils/helper";
+import { formatUserProfile, sendErrorResponse } from "@/utils/helper";
 import jwt from "jsonwebtoken";
-import { profile } from "console";
+import {
+  updateAvatarToAws,
+ 
+} from "@/utils/fileUpload";
 import slugify from "slugify";
-import { updateAvatarToAws } from "@/utils/fileupload";
 
+export const generateAuthLink: RequestHandler = async (req, res) => {
+  // Generate authentication link
+  // and send that link to the users email address
 
-export const generateAuthLink: RequestHandler = async (
-  req: Request,
-  res: Response
-) => {
+  /*
+    1. Generate Unique token for every users
+    2. Store that token securely inside the database
+       so that we can validate it in future.
+    3. Create a link which include that secure token and user information
+    4. Send that link to users email address.
+    5. Notify user to look inside the email to get the login link
+  */
+
   const { email } = req.body;
-  let user = await userModel.findOne({ email });
+  let user = await UserModel.findOne({ email });
   if (!user) {
-    user = await userModel.create({ email });
+    // if no user found then create new user.
+    user = await UserModel.create({ email });
   }
 
   const userID = user._id.toString();
 
-  //if we already have token for user it will remove that first
-  await verificationTokenModel.findOneAndDelete({ userID });
+  // if we already have token for this user it will remove that first
+  await VerificationTokenModel.findOneAndDelete({ userID });
 
   const randomToken = crypto.randomBytes(36).toString("hex");
 
-  await verificationTokenModel.create<{ userID: string }>({
+  await VerificationTokenModel.create<{ userID: string }>({
     userID,
     token: randomToken,
   });
 
-  const link = `${process.env.VERIFICAION_LINK}?token=${randomToken}&userID=${userID}`;
+  const link = `${process.env.VERIFICATION_LINK}?token=${randomToken}&userID=${userID}`;
 
   await mail.sendVerificationMail({
     link,
     to: user.email,
   });
-  // console.log(req.body);
-  res.json({ message: "please check your email for link" });
+
+  res.json({ message: "Please check you email for link." });
 };
 
 export const verifyAuthToken: RequestHandler = async (req, res) => {
@@ -51,41 +59,43 @@ export const verifyAuthToken: RequestHandler = async (req, res) => {
   if (typeof token !== "string" || typeof userID !== "string") {
     return sendErrorResponse({
       status: 403,
-      message: "invalid request",
-      res,
-    });
-  }
-  const verificationtoken = await verificationTokenModel.findOne({ userID });
-  if (!verificationtoken || !verificationtoken.compare(token)) {
-    return sendErrorResponse({
-      status: 403,
-      message: "invalid request ,token mismatch",
+      message: "Invalid request!",
       res,
     });
   }
 
-  const user = await userModel.findById(userID);
+  const verificationToken = await VerificationTokenModel.findOne({ userID });
+  if (!verificationToken || !verificationToken.compare(token)) {
+    return sendErrorResponse({
+      status: 403,
+      message: "Invalid request, token mismatch!",
+      res,
+    });
+  }
+
+  const user = await UserModel.findById(userID);
   if (!user) {
     return sendErrorResponse({
       status: 500,
-      message: "something went wrong, user not found",
+      message: "Something went wrong, user not found!",
       res,
     });
   }
 
-  await verificationTokenModel.findByIdAndDelete(verificationtoken._id);
+  await VerificationTokenModel.findByIdAndDelete(verificationToken._id);
 
-  //authentication
+  // TODO: authentication
   const payload = { userID: user._id };
 
   const authToken = jwt.sign(payload, process.env.JWT_SECRET!, {
-    expiresIn: "25d",
+    expiresIn: "15d",
   });
+
   res.cookie("authToken", authToken, {
     httpOnly: true,
     secure: process.env.NODE_ENV !== "development",
     sameSite: "strict",
-    expires: new Date(Date.now() + 25 * 24 * 60 * 60 * 1000),
+    expires: new Date(Date.now() + 15 * 24 * 60 * 60 * 1000),
   });
 
   res.redirect(
@@ -95,18 +105,18 @@ export const verifyAuthToken: RequestHandler = async (req, res) => {
   );
 };
 
-
-export const sendProfileInfo : RequestHandler =(req,res) => {
+export const sendProfileInfo: RequestHandler = (req, res) => {
   res.json({
     profile: req.user,
   });
 };
 
-export const logout : RequestHandler =(req,res) => {
- res.clearCookie('authToken').send();
-}
+export const logout: RequestHandler = (req, res) => {
+  res.clearCookie("authToken").send();
+};
+
 export const updateProfile: RequestHandler = async (req, res) => {
-  const user = await userModel.findByIdAndUpdate(
+  const user = await UserModel.findByIdAndUpdate(
     req.user.id,
     {
       name: req.body.name,
@@ -124,9 +134,13 @@ export const updateProfile: RequestHandler = async (req, res) => {
       status: 500,
     });
 
-
-    const file = req.files.avatar;
+  // if there is any file upload them to cloud and update the database
+  const file = req.files.avatar;
   if (file && !Array.isArray(file)) {
+    // if you are using cloudinary this is the method you should use
+    // user.avatar = await updateAvatarToCloudinary(file, user.avatar?.id);
+
+    // if you are using aws this is the method you should use
     const uniqueFileName = `${user._id}-${slugify(req.body.name, {
       lower: true,
       replacement: "-",
@@ -139,11 +153,6 @@ export const updateProfile: RequestHandler = async (req, res) => {
 
     await user.save();
   }
-
-
-
-
-  // if there is any file upload them to cloud and update the database
 
   res.json({ profile: formatUserProfile(user) });
 };

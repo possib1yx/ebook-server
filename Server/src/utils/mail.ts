@@ -20,7 +20,7 @@ const mail = {
 
     await transport.sendMail({
       to: options.to,
-      from: process.env.VERIFICAION_MAIL,
+      from: process.env.VERIFICATION_MAIL,
       subject: "Auth Verification",
       html: `
             <div>

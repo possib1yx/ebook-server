@@ -41,6 +41,6 @@ verificationTokenSchema.methods.compare = function(token){
 }
 
 
-const verificationTokenModel = model("verificationToken", verificationTokenSchema)
+const VerificationTokenModel = model("verificationToken", verificationTokenSchema)
 
-export default verificationTokenModel as Model<verificationTokenDoc,{},  Methods>
+export default VerificationTokenModel as Model<verificationTokenDoc,{},  Methods>

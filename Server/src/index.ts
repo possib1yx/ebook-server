@@ -7,6 +7,7 @@ import dotenv from "dotenv";
 import authRouter from "./routes/auth";
 import authorRouter from './routes/author';
 import { fileParser } from './middlewares/file';
+import bookRouter from "./routes/book";
 
 dotenv.config(); 
 const app = express();
@@ -23,6 +24,8 @@ app.use(cookieParser())
 
 app.use("/auth", authRouter);
 app.use("/author", authorRouter);
+app.use("/book", bookRouter);
+
 
 
 

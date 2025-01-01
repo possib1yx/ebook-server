@@ -3,6 +3,7 @@ import { DeleteObjectCommand, PutObjectCommand } from "@aws-sdk/client-s3";
 import { Request } from "express";
 import { File } from "formidable";
 import fs from "fs";
+import { generateS3ClientPublicUrl } from "./helper";
 
 
 
@@ -29,6 +30,6 @@ export const updateAvatarToAws = async (
 
   return {
     id: uniqueFileName,
-    url: `https://${bucketName}.s3.amazonaws.com/${uniqueFileName}`,
+    url: generateS3ClientPublicUrl('ebook-public-datas',uniqueFileName)
   };
 };

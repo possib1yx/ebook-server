@@ -1,5 +1,5 @@
-import { Response,Request } from "express";
-import { userDoc } from "@/models/user";
+import { UserDoc } from "@/models/user";
+import { Request, Response } from "express";
 
 type ErrorResponseType = {
   res: Response;
@@ -15,14 +15,29 @@ export const sendErrorResponse = ({
   res.status(status).json({ message });
 };
 
-
-export const formatUserProfile = (user:userDoc) : Request["user"]=>{
+export const formatUserProfile = (user: UserDoc): Request["user"] => {
   return {
     id: user._id.toString(),
     name: user.name,
     email: user.email,
-    role:user.role,
+    role: user.role,
     avatar: user.avatar?.url,
-    signedUp:user.signedUp,
+    signedUp: user.signedUp,
+    authorId: user.authorId?.toString(),
   };
+};
+
+export function formatFileSize(bytes: number) {
+  if (bytes === 0) return "0 Bytes";
+  const k = 1024;
+  const sizes = ["Bytes", "KB", "MB", "GB", "TB", "PB", "EB", "ZB", "YB"];
+  const i = Math.floor(Math.log(bytes) / Math.log(k));
+  return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + " " + sizes[i];
+}
+
+export const generateS3ClientPublicUrl = (
+  bucketName: string,
+  uniqueKey: string
+): string => {
+  return `https://${bucketName}.s3.amazonaws.com/${uniqueKey}`
 };

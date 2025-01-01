@@ -18,7 +18,7 @@ export const registerAuthor: RequestAuthorHandler = async (req, res) => {
   const newAuthor = new AuthorModel({
     name: body.name,
     about: body.about,
-    userId: user.id,
+    userID: user.id,
     socialLinks: body.socialLinks,
   });
 
