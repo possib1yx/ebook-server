@@ -7,6 +7,7 @@ import slugify from "slugify";
 import fs from "fs";
 import s3Client from "@/cloud/aws";
 import { generateFileUploadUrl, uploadBookToAws } from "@/utils/fileUpload";
+import AuthorModel from "@/models/author";
 
 export const createNewBook: CreateBookRequestHandler = async (req, res) => {
   const { body, files, user } = req;
@@ -64,6 +65,13 @@ newBook.fileInfo.id = fileName;
     newBook.cover = await uploadBookToAws(cover.filepath, uniqueFileName);
   }
 
+
+  await AuthorModel.findByIdAndUpdate(user.authorId,{
+    $pusp:{
+      books: newBook._id,
+
+    },
+  })
   await newBook.save();
   res.send(fileUploadUrl);
 };
