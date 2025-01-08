@@ -6,6 +6,7 @@ import { Types } from "mongoose";
 import slugify from "slugify";
 import fs from "fs";
 import s3Client from "@/cloud/aws";
+import { generateFileUploadUrl, uploadBookToAws } from "@/utils/fileUpload";
 
 export const createNewBook: CreateBookRequestHandler = async (req, res) => {
   const { body, files, user } = req;
@@ -25,15 +26,15 @@ export const createNewBook: CreateBookRequestHandler = async (req, res) => {
 
   const newBook = new BookModel<BookDoc>({
     title,
-    // description,
-    // genre,
-    // language,
-    // fileInfo: { size: formatFileSize(fileInfo.size), id: "" },
-    // price,
-    // publicationName,
-    // publishedAt,
-    // slug: "",
-    // author: new Types.ObjectId(user.authorId),
+    description,
+    genre,
+    language,
+    fileInfo: { size: formatFileSize(fileInfo.size), id: "" },
+    price,
+    publicationName,
+    publishedAt,
+    slug: "",
+    author: new Types.ObjectId(user.authorId),
   });
 
   newBook.slug = slugify(`${newBook.title} ${newBook._id}`, {
@@ -41,23 +42,28 @@ export const createNewBook: CreateBookRequestHandler = async (req, res) => {
     replacement: "-",
   });
 
-  console.log(cover);
-  //this will upload cover to the cloud
-  if (cover && !Array.isArray(cover)) {
-    const uniqueFileName = `${newBook._id} ${newBook.title}.png`;
-    const putCommand = new PutObjectCommand({
-      Bucket: "ebook-public-datas",
-      Key: uniqueFileName,
-      Body: fs.readFileSync(cover.filepath),
-    });
-    await s3Client.send(putCommand);
+  const fileName = slugify(`${newBook._id} ${newBook.title}.epub`, {
+    lower: true,
+    replacement: "-",
+  });
+  const fileUploadUrl = await generateFileUploadUrl(s3Client, {
+    bucket: process.env.AWS_PRIVATE_BUCKET!,
+    contentType: fileInfo.type,
+    uniqueKey: fileName,
+  });
 
-    newBook.cover = {
-      id: uniqueFileName,
-      url: generateS3ClientPublicUrl("ebook-public-datas", uniqueFileName),
-    };
+newBook.fileInfo.id = fileName;
+
+  // this will upload cover to the cloud
+  if (cover && !Array.isArray(cover) && cover.mimetype?.startsWith("image")) {
+    const uniqueFileName = slugify(`${newBook._id} ${newBook.title}.png`, {
+      lower: true,
+      replacement: "-",
+    });
+
+    newBook.cover = await uploadBookToAws(cover.filepath, uniqueFileName);
   }
 
-  //await newBook.save();
-  res.send();
+  await newBook.save();
+  res.send(fileUploadUrl);
 };
