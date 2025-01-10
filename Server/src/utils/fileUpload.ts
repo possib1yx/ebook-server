@@ -1,4 +1,6 @@
+
 import s3Client from "@/cloud/aws";
+
 import {
   DeleteObjectCommand,
   PutObjectCommand,
@@ -11,12 +13,13 @@ import path from "path";
 import { generateS3ClientPublicUrl } from "./helper";
 import { getSignedUrl } from "@aws-sdk/s3-request-presigner";
 
+
 export const updateAvatarToAws = async (
   file: File,
   uniqueFileName: string,
   avatarId?: string
 ) => {
-  const bucketName = process.env.AWS_PUBLIC_BUCKET!;
+  const bucketName = process.env.AWS_PUBLIC_BUCKET;
   if (avatarId) {
     const deleteCommand = new DeleteObjectCommand({
       Bucket: bucketName,
@@ -34,21 +37,22 @@ export const updateAvatarToAws = async (
 
   return {
     id: uniqueFileName,
-    url: generateS3ClientPublicUrl(process.env.AWS_PUBLIC_BUCKET!, uniqueFileName),
+    url: generateS3ClientPublicUrl("ebook-public", uniqueFileName),
   };
 };
 
-// export const uploadBookToLocalDir = (file: File, uniqueFileName: string) => {
-//   const bookStoragePath = path.join(__dirname, "../books");
 
-//   if (!fs.existsSync(bookStoragePath)) {
-//     fs.mkdirSync(bookStoragePath);
-//   }
+export const uploadBookToLocalDir = (file: File, uniqueFileName: string) => {
+  const bookStoragePath = path.join(__dirname, "../books");
 
-//   const filePath = path.join(bookStoragePath, uniqueFileName);
+  if (!fs.existsSync(bookStoragePath)) {
+    fs.mkdirSync(bookStoragePath);
+  }
 
-//   fs.writeFileSync(filePath, fs.readFileSync(file.filepath));
-// };
+  const filePath = path.join(bookStoragePath, uniqueFileName);
+
+  fs.writeFileSync(filePath, fs.readFileSync(file.filepath));
+};
 
 export const uploadBookToAws = async (
   filepath: string,
@@ -63,7 +67,10 @@ export const uploadBookToAws = async (
 
   return {
     id: uniqueFileName,
-    url: generateS3ClientPublicUrl(process.env.AWS_PUBLIC_BUCKET!, uniqueFileName),
+    url: generateS3ClientPublicUrl(
+      process.env.AWS_PUBLIC_BUCKET!,
+      uniqueFileName
+    ),
   };
 };
 
@@ -72,6 +79,7 @@ interface FileInfo {
   uniqueKey: string;
   contentType: string;
 }
+
 export const generateFileUploadUrl = async (
   client: S3Client,
   fileInfo: FileInfo
@@ -83,5 +91,5 @@ export const generateFileUploadUrl = async (
     ContentType: contentType,
   });
 
-  return await getSignedUrl(client, command );
+  return await getSignedUrl(client, command);
 };
